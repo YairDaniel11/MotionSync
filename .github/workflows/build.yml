@@ -21,7 +21,9 @@ jobs:
         run: pip install -r requirements.txt pyinstaller
 
       - name: Build exe
-        run: pyinstaller --onefile --noconsole --clean --name MotionSync main.py
+        run: >
+          pyinstaller --onefile --noconsole --clean --name MotionSync
+          --icon assets/icon.ico --add-data "assets;assets" main.py
 
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
@@ -74,6 +76,7 @@ jobs:
       - name: Build app bundle
         run: >
           pyinstaller --windowed --clean --name MotionSync
+          --icon assets/icon.icns --add-data "assets:assets"
           --osx-bundle-identifier com.yairdaniel.motionsync main.py
 
       - name: Add camera usage description to Info.plist

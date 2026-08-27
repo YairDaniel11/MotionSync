@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" alt="MotionSync" width="140">
+</p>
+
 # MotionSync - מניעת בחילות נסיעה
 
 יישום רקע ל-Windows שמנצל את מצלמת הרשת של המחשב הנייד כדי לזהות תנועת

@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 from config import Config
 from motion_engine import MotionEngine
 from overlay import Overlay
+from resources import app_icon
 from settings_dialog import SettingsDialog
 from tray_icon import TrayController
 
@@ -101,6 +102,7 @@ def main():
     app.setQuitOnLastWindowClosed(False)
     app.setApplicationName("MotionSync")
     app.setApplicationDisplayName("MotionSync")
+    app.setWindowIcon(app_icon())
 
     try:
         controller = MotionSyncApp()

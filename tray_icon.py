@@ -7,21 +7,24 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import QMenu, QSystemTrayIcon
 
+from resources import app_icon
+
 
 def make_tray_icon(active: bool = True) -> QIcon:
-    """מייצר סמל פשוט: עיגול ירוק (פעיל) / אפור (מושהה)."""
-    pix = QPixmap(32, 32)
-    pix.fill(Qt.transparent)
+    """אייקון האפליקציה עם נקודת מצב: ירוקה (פעיל) / אפורה (מושהה)."""
+    size = 64
+    pix = app_icon().pixmap(size, size)
+    if pix.isNull():
+        pix = QPixmap(size, size)
+        pix.fill(QColor("#1b6f8c"))
+
     p = QPainter(pix)
     p.setRenderHint(QPainter.Antialiasing)
-    color = QColor("#2ecc71") if active else QColor("#95a5a6")
-    p.setBrush(color)
-    p.setPen(Qt.NoPen)
-    p.drawEllipse(4, 4, 24, 24)
-    # "נקודות" לבנות - סמליל התנועה
-    p.setBrush(QColor("white"))
-    for (x, y) in ((10, 11), (16, 16), (10, 21)):
-        p.drawEllipse(x, y, 4, 4)
+    dot = size // 3
+    margin = size // 16
+    p.setBrush(QColor("#2ecc71") if active else QColor("#95a5a6"))
+    p.setPen(QColor("white"))
+    p.drawEllipse(size - dot - margin, size - dot - margin, dot, dot)
     p.end()
     return QIcon(pix)
 
