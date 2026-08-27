@@ -46,20 +46,20 @@ jobs:
 
   build-macos:
     name: macOS (${{ matrix.arch }})
-    # macos-13 הוצא משירות ע"י GitHub וגרם לתור תקוע ולכן הוסר.
-    # שני ה-builds רצים על macos-14 (arm64); build האינטל משתמש ב-Python
-    # x86_64 תחת Rosetta + PyInstaller --target-architecture x86_64.
-    runs-on: macos-14
+    # macos-13 הוצא משירות; ל-Intel משתמשים ב-macos-15-intel (ראנר x86_64 אמיתי).
+    # אי אפשר לבנות Intel מתוך ראנר arm64: ל-PyQt5 אין wheels ל-x86_64/universal2,
+    # ולכן PyInstaller נכשל ב-COLLECT עם IncompatibleBinaryArchError.
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: Intel
+            runner: macos-15-intel
             python-arch: x64
-            pyinstaller-args: --target-architecture x86_64
           - arch: AppleSilicon
+            runner: macos-14
             python-arch: arm64
-            pyinstaller-args: ''
     steps:
       - uses: actions/checkout@v4
 
@@ -74,7 +74,6 @@ jobs:
       - name: Build app bundle
         run: >
           pyinstaller --windowed --clean --name MotionSync
-          ${{ matrix.pyinstaller-args }}
           --osx-bundle-identifier com.yairdaniel.motionsync main.py
 
       - name: Add camera usage description to Info.plist
