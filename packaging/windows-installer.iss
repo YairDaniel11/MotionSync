@@ -13,7 +13,8 @@ AppPublisher=YairDaniel11
 DefaultDirName={autopf}\MotionSync
 DefaultGroupName=MotionSync
 DisableProgramGroupPage=yes
-OutputDir=Output
+; Relative to this .iss file, so the installer lands in dist\Output (what CI uploads).
+OutputDir=..\dist\Output
 OutputBaseFilename=MotionSync-Setup-{#AppVersion}
 Compression=lzma2/max
 SolidCompression=yes
