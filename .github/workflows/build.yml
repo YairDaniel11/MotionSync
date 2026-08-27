@@ -85,11 +85,22 @@ jobs:
           cd dist
           zip -r -y MotionSync-macOS-${{ matrix.arch }}.zip MotionSync.app
 
+      # DMG עם קיצור דרך ל-Applications — חוויית ההתקנה הרגילה ב-macOS.
+      - name: Build DMG installer
+        run: |
+          mkdir -p dmg-stage
+          cp -R dist/MotionSync.app dmg-stage/
+          ln -s /Applications dmg-stage/Applications
+          hdiutil create -volname MotionSync -srcfolder dmg-stage -ov -format UDZO \
+            dist/MotionSync-macOS-${{ matrix.arch }}.dmg
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: MotionSync-macOS-${{ matrix.arch }}
-          path: dist/*.zip
+          path: |
+            dist/*.zip
+            dist/*.dmg
 
   release:
     name: Create GitHub Release
@@ -110,5 +121,6 @@ jobs:
         with:
           files: |
             release/*.exe
+            release/*.dmg
             release/*.zip
           generate_release_notes: true
