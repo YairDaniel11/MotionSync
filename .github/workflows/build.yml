@@ -1,0 +1,108 @@
+name: Build MotionSync
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Windows (exe + installer)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build exe
+        run: pyinstaller --onefile --noconsole --clean --name MotionSync main.py
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_NAME -match '^v') { $env:GITHUB_REF_NAME.Substring(1) } else { '0.0.0-dev' }
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=$version packaging\windows-installer.iss
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MotionSync-Windows-exe
+          path: dist/MotionSync.exe
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MotionSync-Windows-Installer
+          path: dist/Output/*.exe
+
+  build-macos:
+    name: macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13    # אינטל (x86_64)
+            arch: Intel
+          - os: macos-14    # Apple Silicon (M1/M2/arm64)
+            arch: AppleSilicon
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build app bundle
+        run: >
+          pyinstaller --windowed --clean --name MotionSync
+          --osx-bundle-identifier com.yairdaniel.motionsync main.py
+
+      - name: Add camera usage description to Info.plist
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'MotionSync uses the camera to detect vehicle motion locally. No video is stored or transmitted.'" dist/MotionSync.app/Contents/Info.plist
+
+      - name: Zip app bundle
+        run: |
+          cd dist
+          zip -r -y MotionSync-macOS-${{ matrix.arch }}.zip MotionSync.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MotionSync-macOS-${{ matrix.arch }}
+          path: dist/*.zip
+
+  release:
+    name: Create GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Attach files to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/*.exe
+            release/*.zip
+          generate_release_notes: true
